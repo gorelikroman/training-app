@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренировки</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 16px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .complex-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .complex-item {
+            padding: 16px;
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .complex-item:hover {
+            background-color: var(--tg-theme-hint-color, #e0e0e0);
+        }
+
+        .exercise-container {
+            display: none;
+        }
+
+        .exercise-container.active {
+            display: block;
+        }
+
+        .exercise-info {
+            margin-bottom: 24px;
+        }
+
+        .sets-list {
+            margin: 16px 0;
+        }
+
+        .set-item {
+            padding: 8px;
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 4px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .navigation {
+            display: flex;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .navigation button {
+            flex: 1;
+        }
+
+        .history-container {
+            display: none;
+        }
+
+        .history-container.active {
+            display: block;
+        }
+
+        .history-item {
+            padding: 16px;
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏋️ Тренировки</h1>
+        
+        <div class="complex-list" id="complexList">
+            <!-- Список комплексов будет добавлен через JavaScript -->
+        </div>
+
+        <div class="exercise-container" id="exerciseContainer">
+            <div class="exercise-info">
+                <h2 id="exerciseName"></h2>
+                <div id="exerciseDetails"></div>
+            </div>
+
+            <div class="sets-list" id="setsList">
+                <!-- Список подходов будет добавлен через JavaScript -->
+            </div>
+
+            <div class="input-group">
+                <input type="number" id="weightInput" placeholder="Вес">
+                <input type="number" id="repsInput" placeholder="Повторы">
+            </div>
+
+            <button onclick="saveSet()">Сохранить подход</button>
+
+            <div class="navigation">
+                <button onclick="prevExercise()">← Назад</button>
+                <button onclick="nextExercise()">Далее →</button>
+            </div>
+        </div>
+
+        <div class="history-container" id="historyContainer">
+            <!-- История тренировок будет добавлена через JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        let currentComplex = null;
+        let currentExerciseIndex = 0;
+        let results = {};
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            tg.expand();
+            loadComplexes();
+        });
+
+        // Загрузка списка комплексов
+        async function loadComplexes() {
+            try {
+                const response = await fetch('/api/complexes');
+                const complexes = await response.json();
+                
+                const complexList = document.getElementById('complexList');
+                complexList.innerHTML = complexes.map(complex => `
+                    <div class="complex-item" onclick="selectComplex('${complex.id}')">
+                        ${complex.name}
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading complexes:', error);
+            }
+        }
+
+        // Выбор комплекса
+        function selectComplex(complexId) {
+            fetch('/api/complexes')
+                .then(response => response.json())
+                .then(complexes => {
+                    currentComplex = complexes.find(c => c.id === complexId);
+                    if (currentComplex) {
+                        currentExerciseIndex = 0;
+                        results = {};
+                        showExercise();
+                        document.getElementById('complexList').style.display = 'none';
+                        document.getElementById('exerciseContainer').classList.add('active');
+                    }
+                });
+        }
+
+        // Показ упражнения
+        function showExercise() {
+            const exercise = currentComplex.exercises[currentExerciseIndex];
+            document.getElementById('exerciseName').textContent = exercise.name;
+            document.getElementById('exerciseDetails').innerHTML = `
+                ${exercise.sets} × ${exercise.reps} — ${exercise.type}<br>
+                Рекомендуемый вес: ${exercise.weight} кг
+            `;
+
+            const sets = results[currentExerciseIndex]?.sets || [];
+            document.getElementById('setsList').innerHTML = sets.map((set, i) => `
+                <div class="set-item">
+                    Подход ${i + 1}: ${set.weight} кг × ${set.reps} раз
+                </div>
+            `).join('');
+        }
+
+        // Сохранение подхода
+        function saveSet() {
+            const weight = document.getElementById('weightInput').value;
+            const reps = document.getElementById('repsInput').value;
+
+            if (!weight || !reps) {
+                alert('Введите вес и количество повторений');
+                return;
+            }
+
+            const key = `${currentExerciseIndex}`;
+            const prev = results[key] || { sets: [] };
+            results[key] = {
+                ...prev,
+                sets: [...prev.sets, { weight: Number(weight), reps: Number(reps) }]
+            };
+
+            document.getElementById('weightInput').value = '';
+            document.getElementById('repsInput').value = '';
+            showExercise();
+        }
+
+        // Навигация между упражнениями
+        function prevExercise() {
+            if (currentExerciseIndex > 0) {
+                currentExerciseIndex--;
+                showExercise();
+            }
+        }
+
+        function nextExercise() {
+            if (currentExerciseIndex < currentComplex.exercises.length - 1) {
+                currentExerciseIndex++;
+                showExercise();
+            } else {
+                finishTraining();
+            }
+        }
+
+        // Завершение тренировки
+        function finishTraining() {
+            const trainingData = {
+                date: new Date().toISOString(),
+                complex: currentComplex.name,
+                exercises: Object.entries(results).map(([index, data]) => ({
+                    name: currentComplex.exercises[Number(index)].name,
+                    sets: data.sets
+                }))
+            };
+
+            fetch('/api/save-training', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ trainingData })
+            }).then(() => {
+                alert('Тренировка сохранена!');
+                document.getElementById('exerciseContainer').classList.remove('active');
+                document.getElementById('complexList').style.display = 'flex';
+            });
+        }
+    </script>
+</body>
+</html> 

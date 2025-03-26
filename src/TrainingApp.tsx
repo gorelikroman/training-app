@@ -1,7 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { saveAs } from 'file-saver';
-import Papa from 'papaparse';
+
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface ExerciseData {
   sets: { weight: number; reps: number }[];
@@ -28,6 +48,30 @@ export default function TrainingApp() {
   const [activeTab, setActiveTab] = useState<'training' | 'history'>('training');
   const [isTrainingFinished, setIsTrainingFinished] = useState<boolean>(false);
   const [editingSet, setEditingSet] = useState<{ exerciseIndex: number; setIndex: number } | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [selectedGraphComplex, setSelectedGraphComplex] = useState<string>('');
+  
+  const exerciseProgressData = useMemo(() => {
+    const map: { [exerciseName: string]: { date: string; avgWeight: number }[] } = {};
+  
+    history
+      .filter(h => selectedGraphComplex === '' || h.complex === selectedGraphComplex)
+      .forEach(entry => {
+        const date = entry.date;
+        for (const [exerciseName, exerciseData] of Object.entries(entry.results)) {
+          const avgWeight =
+            exerciseData.sets.reduce((sum: number, s: any) => sum + s.weight, 0) /
+            (exerciseData.sets.length || 1);
+          if (!map[exerciseName]) map[exerciseName] = [];
+          map[exerciseName].push({ date, avgWeight });
+        }
+      });
+  
+    return map;
+  }, [history, selectedGraphComplex]);
 
   const current = selectedComplex ? selectedComplex[currentExercise] : null;
 
@@ -72,7 +116,7 @@ export default function TrainingApp() {
         setError(error.message);
       }
     };
-
+ 
     loadJSONData();
   }, []);
 
@@ -98,7 +142,7 @@ export default function TrainingApp() {
     const formData = new FormData(e.target);
     const weight = formData.get('weight');
     const reps = formData.get('reps');
-
+    
     if (!weight || !reps) {
       setError('Пожалуйста, введите вес и количество повторений');
       return;
@@ -106,14 +150,14 @@ export default function TrainingApp() {
 
     const key = `${currentExercise}`;
     const prev = results[key] || { sets: [], comment: "" };
-
+    
     let updated;
     if (editingSet && editingSet.exerciseIndex === currentExercise) {
       // Редактирование существующего подхода
       const newSets = [...prev.sets];
-      newSets[editingSet.setIndex] = {
-        weight: Number(weight),
-        reps: Number(reps)
+      newSets[editingSet.setIndex] = { 
+        weight: Number(weight), 
+        reps: Number(reps) 
       };
       updated = {
         ...results,
@@ -123,25 +167,25 @@ export default function TrainingApp() {
       // Добавление нового подхода
       updated = {
         ...results,
-        [key]: {
-          ...prev,
-          sets: [...prev.sets, {
-            weight: Number(weight),
-            reps: Number(reps)
-          }]
+        [key]: { 
+          ...prev, 
+          sets: [...prev.sets, { 
+            weight: Number(weight), 
+            reps: Number(reps) 
+          }] 
         }
       };
     }
-
+    
     setResults(updated);
     e.target.reset();
     setEditingSet(null);
     setRestTime(60);
-
+    
     if (intervalId) {
       clearInterval(intervalId);
     }
-
+    
     const id = setInterval(() => {
       setRestTime((prev) => {
         if (prev === 1) {
@@ -151,7 +195,7 @@ export default function TrainingApp() {
         return (prev ?? 1) - 1;
       });
     }, 1000);
-
+    
     setIntervalId(id);
     setError(null);
   };
@@ -241,8 +285,48 @@ export default function TrainingApp() {
 
   console.log("Текущие данные упражнения:", current);
 
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (username === 'romangorelik' && password === 'JCt2m4') {
+      setIsAuthenticated(true);
+      setAuthError(null);
+    } else {
+      setAuthError('Неверный логин или пароль');
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-900">
+        <form onSubmit={handleLogin} className="bg-gray-800 p-6 rounded shadow-md">
+          <h2 className="text-white text-2xl mb-4">Авторизация</h2>
+          {authError && <div className="text-red-500 mb-2">{authError}</div>}
+          <input
+            type="text"
+            placeholder="Логин"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="border p-2 rounded mb-4 w-full bg-gray-700 text-white"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Пароль"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="border p-2 rounded mb-4 w-full bg-gray-700 text-white"
+            required
+          />
+          <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Войти
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-xs mx-auto p-4">
+    <div className="max-w-xs mx-auto min-h-screen flex flex-col justify-start items-center pt-10 px-4">
       <div className="space-y-6">
         <div className="flex justify-center space-x-4">
           <button onClick={() => setActiveTab('training')} className={`px-4 py-2 ${activeTab === 'training' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}>Тренировка</button>
@@ -286,7 +370,7 @@ export default function TrainingApp() {
                     <button
                       key={i}
                       onClick={() => setCurrentExercise(i)}
-                      className={`flex-1 px-3 py-1 rounded text-sm ${i === currentExercise ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                      className={`min-w-[40px] px-3 py-1 rounded text-sm text-center ${i === currentExercise ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
                     >
                       {i + 1}
                     </button>
@@ -331,35 +415,35 @@ export default function TrainingApp() {
 
                 <form onSubmit={saveSet} className="space-y-4">
                   <div className="flex flex-col gap-2">
-                    <input
-                      name="weight"
-                      type="number"
-                      placeholder="Вес"
-                      className="border p-2 rounded bg-gray-700 text-white"
-                      required
-                      defaultValue={editingSet && editingSet.exerciseIndex === currentExercise
-                        ? results[currentExercise]?.sets[editingSet.setIndex]?.weight
+                    <input 
+                      name="weight" 
+                      type="number" 
+                      placeholder="Вес" 
+                      className="border p-2 rounded bg-gray-700 text-white" 
+                      required 
+                      defaultValue={editingSet && editingSet.exerciseIndex === currentExercise 
+                        ? results[currentExercise]?.sets[editingSet.setIndex]?.weight 
                         : ''}
                     />
-                    <input
-                      name="reps"
-                      type="number"
-                      placeholder="Повторы"
-                      className="border p-2 rounded bg-gray-700 text-white"
-                      required
-                      defaultValue={editingSet && editingSet.exerciseIndex === currentExercise
-                        ? results[currentExercise]?.sets[editingSet.setIndex]?.reps
+                    <input 
+                      name="reps" 
+                      type="number" 
+                      placeholder="Повторы" 
+                      className="border p-2 rounded bg-gray-700 text-white" 
+                      required 
+                      defaultValue={editingSet && editingSet.exerciseIndex === currentExercise 
+                        ? results[currentExercise]?.sets[editingSet.setIndex]?.reps 
                         : ''}
                     />
                   </div>
-                  <button
-                    type="submit"
+                  <button 
+                    type="submit" 
                     className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                   >
                     {editingSet && editingSet.exerciseIndex === currentExercise ? 'Сохранить изменения' : 'Сохранить подход'}
                   </button>
                   {editingSet && editingSet.exerciseIndex === currentExercise && (
-                    <button
+                    <button 
                       type="button"
                       onClick={() => setEditingSet(null)}
                       className="w-full bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600"
@@ -450,6 +534,116 @@ export default function TrainingApp() {
         {activeTab === 'history' && history.length > 0 && (
           <div className="mt-8 w-full">
             <h3 className="font-bold text-lg mb-2 text-white">История тренировок</h3>
+            <div className="bg-gray-900 p-4 rounded mb-4">
+              <h4 className="text-white font-semibold mb-2">📈 График оценок тренировок</h4>
+              <Line
+                data={{
+                  labels: history.map((_, idx) => String(idx + 1).padStart(2, '0')),
+                  datasets: [
+                    {
+                      label: 'Оценка тренировки',
+                      data: history.map(h => h.trainingRating),
+                      borderColor: 'rgba(59,130,246,1)',
+                      backgroundColor: 'rgba(59,130,246,0.2)',
+                      fill: true,
+                      tension: 0.4,
+                    },
+                    {
+                      label: 'Самочувствие',
+                      data: history.map(h => h.conditionRating),
+                      borderColor: 'rgba(16,185,129,1)',
+                      backgroundColor: 'rgba(16,185,129,0.2)',
+                      fill: true,
+                      tension: 0.4,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  plugins: {
+                    legend: {
+                      labels: {
+                        color: '#ffffff',
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        boxWidth: 6,
+                        boxHeight: 6,
+                      }
+                    },
+                    title: {
+                      display: false,
+                    },
+                  },
+                  scales: {
+                    x: {
+                      ticks: { color: '#aaa' },
+                    },
+                    y: {
+                      ticks: { color: '#aaa' },
+                      suggestedMin: 0,
+                      suggestedMax: 10,
+                    },
+                  },
+                }}
+              />
+            </div>
+            <div className="bg-gray-900 p-4 rounded mb-4">
+              <h4 className="text-white font-semibold mb-2">📊 Прогресс по весам</h4>
+              <label className="text-gray-300 block mb-2">Фильтр по комплексу:</label>
+              <select
+                className="bg-gray-700 text-white p-2 rounded w-full mb-4"
+                value={selectedGraphComplex}
+                onChange={(e) => setSelectedGraphComplex(e.target.value)}
+              >
+                <option value="">Все комплексы</option>
+                {[...new Set(history.map(h => h.complex))].map((c, i) => (
+                  <option key={i} value={c}>{c}</option>
+                ))}
+              </select>
+
+              {Object.keys(exerciseProgressData).length === 0 ? (
+                <p className="text-gray-400">Нет данных для отображения.</p>
+              ) : (
+                <Line
+  height={300}
+  data={{
+    labels: history.map((_, idx) => String(idx + 1).padStart(2, '0')),
+    datasets: Object.entries(exerciseProgressData).map(([exercise, values]) => ({
+      label: exercise,
+      data: values.map(v => v.avgWeight),
+      borderColor: `hsl(${Math.random() * 360}, 70%, 60%)`,
+      backgroundColor: 'rgba(255,255,255,0.05)',
+      fill: false,
+      tension: 0.4,
+    })),
+  }}
+  options={{
+    responsive: true,
+    plugins: {
+      legend: {
+        labels: {
+          color: '#fff',
+          usePointStyle: true,
+          pointStyle: 'circle',
+          boxWidth: 6,
+          boxHeight: 6
+        },
+      },
+    },
+    scales: {
+      x: {
+        ticks: { color: '#aaa' },
+      },
+      y: {
+        ticks: { color: '#aaa' },
+        suggestedMin: 0,
+        suggestedMax: 90,
+      },
+    },
+  }}
+/>
+              )}
+            </div>
             <ul className="space-y-2 text-sm">
               {history.slice().reverse().map((h: any, i: number) => (
                 <li key={i} className="border border-gray-700 rounded p-2 bg-gray-800 w-full">
@@ -462,10 +656,10 @@ export default function TrainingApp() {
                     <h4 className="font-semibold text-gray-300">Подходы:</h4>
                     {Object.entries(h.results).map(([exerciseName, exerciseData]: [string, ExerciseData]) => (
                       <div key={exerciseName} className="mt-2">
-                        <div className="text-gray-300">{exerciseData.name}</div>
+                        <div className="text-gray-300 w-full max-w-xs break-words">{exerciseData.name}</div>
                         <ul className="list-disc pl-4">
                           {exerciseData.sets.map((set: any, index: number) => (
-                            <li key={index} className="text-gray-300">
+                            <li key={index} className="bg-gray-800 text-white rounded-md p-2 my-2 break-words">
                               {index + 1} подход: {set.weight} кг × {set.reps} раз
                             </li>
                           ))}
