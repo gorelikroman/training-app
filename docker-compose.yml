@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  training-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173" # Vite dev server
+      - "3000:3000" # Express API server
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3000
+    command: sh ./start-dev.sh # Изменено здесь

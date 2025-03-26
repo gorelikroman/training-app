@@ -1,0 +1,169 @@
+[
+  {
+    "date": "26 мар. 2025 г.",
+    "complex": "1 — Спина (широчайшие)",
+    "results": {
+      "Тяга верхнего блока к груди": {
+        "sets": [
+          {
+            "weight": 55,
+            "reps": 12
+          },
+          {
+            "weight": 55,
+            "reps": 12
+          }
+        ],
+        "name": "Тяга верхнего блока к груди"
+      },
+      "Тяга горизонтального блока": {
+        "sets": [
+          {
+            "weight": 55,
+            "reps": 12
+          },
+          {
+            "weight": 55,
+            "reps": 12
+          }
+        ],
+        "name": "Тяга горизонтального блока"
+      }
+    },
+    "trainingRating": 10,
+    "conditionRating": 10,
+    "trainingComment": "супер"
+  },
+  {
+    "date": "26 мар. 2025 г.",
+    "complex": "1 — Спина (широчайшие)",
+    "results": {
+      "Приседания с весом": {
+        "sets": [
+          {
+            "weight": 12,
+            "reps": 12
+          },
+          {
+            "weight": 55,
+            "reps": 12
+          }
+        ],
+        "comment": "",
+        "name": "Приседания с весом"
+      }
+    },
+    "trainingRating": 10,
+    "conditionRating": 10,
+    "trainingComment": "ц344"
+  },
+  {
+    "date": "26 мар. 2025 г.",
+    "complex": "1 — Спина (широчайшие)",
+    "results": {
+      "Тяга верхнего блока к груди": {
+        "sets": [
+          {
+            "weight": 55,
+            "reps": 12
+          }
+        ],
+        "comment": "",
+        "name": "Тяга верхнего блока к груди"
+      }
+    },
+    "trainingRating": 5,
+    "conditionRating": 5,
+    "trainingComment": ""
+  },
+  {
+    "date": "26 мар. 2025 г.",
+    "complex": "1 — Спина (широчайшие)",
+    "results": {
+      "Приседания с весом": {
+        "sets": [
+          {
+            "weight": 155,
+            "reps": 12
+          }
+        ],
+        "comment": "",
+        "name": "Приседания с весом"
+      }
+    },
+    "trainingRating": 5,
+    "conditionRating": 5,
+    "trainingComment": ""
+  },
+  {
+    "date": "26 мар. 2025 г.",
+    "complex": "1 — Спина (широчайшие)",
+    "results": {
+      "Тяга верхнего блока к груди": {
+        "sets": [
+          {
+            "weight": 12,
+            "reps": 12
+          }
+        ],
+        "name": "Тяга верхнего блока к груди"
+      },
+      "Приседания с весом": {
+        "sets": [
+          {
+            "weight": 55,
+            "reps": 12
+          }
+        ],
+        "name": "Приседания с весом"
+      }
+    },
+    "trainingRating": 5,
+    "conditionRating": 5,
+    "trainingComment": ""
+  },
+  {
+    "date": "26 мар. 2025 г.",
+    "complex": "1 — Спина (широчайшие)",
+    "results": {
+      "Приседания с весом": {
+        "sets": [
+          {
+            "weight": 55,
+            "reps": 12
+          }
+        ],
+        "name": "Приседания с весом"
+      }
+    },
+    "trainingRating": 5,
+    "conditionRating": 10,
+    "trainingComment": ""
+  },
+  {
+    "date": "26 мар. 2025 г.",
+    "complex": "1 — Спина (широчайшие)",
+    "results": {
+      "Приседания с весом": {
+        "sets": [
+          {
+            "weight": 55,
+            "reps": 12
+          }
+        ],
+        "name": "Приседания с весом"
+      }
+    },
+    "trainingRating": 5,
+    "conditionRating": 5,
+    "trainingComment": ""
+  },
+  {
+    "date": "26 мар. 2025 г.",
+    "complex": "1 — Спина (широчайшие)",
+    "results": {},
+    "trainingRating": 5,
+    "conditionRating": 5,
+    "trainingComment": ""
+  }
+]
