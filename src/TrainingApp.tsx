@@ -241,7 +241,7 @@ export default function TrainingApp() {
     };
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/save-training`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/training-app/api/save-training`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

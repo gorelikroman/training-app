@@ -30,17 +30,13 @@ jobs:
     
     - name: Prepare full deployment
       run: |
-        # Копируем серверный файл в папку сборки
-        cp server.js dist/
-        cp package.json dist/
-        # Копируем необходимые модули для запуска сервера
-        mkdir -p dist/node_modules
-        npm install express cors --save-dist
+        mkdir -p deploy
+        cp -r ./ deploy/
     
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: ./dist
+        path: ./deploy
 
   deploy:
     environment:
