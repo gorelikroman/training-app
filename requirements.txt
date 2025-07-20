@@ -1,0 +1,6 @@
+fastapi
+jinja2
+weasyprint
+openai
+uvicorn
+python-multipart
